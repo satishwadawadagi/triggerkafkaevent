@@ -46,7 +46,9 @@ jobs:
       - name: Login to GHCR
         shell: powershell
         run: |
-          echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io -u satishwadawadagi --password-stdin
+          #echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io -u satishwadawadagi --password-stdin
+          $token = "${{ secrets.GHCR_PAT }}"
+          $token | podman login ghcr.io -u satishwadawadagi --password-stdin
 
       # ---------------- Push Image ----------------
       - name: Push Image
