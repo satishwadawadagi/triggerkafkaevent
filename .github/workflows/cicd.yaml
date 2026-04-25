@@ -1,0 +1,101 @@
+name: Multi-Tenant CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - "user1/*"
+      - "user2/*"
+      - "user3/*"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: multi-tenant-webapp
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+
+      # ---------------- Checkout ----------------
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ---------------- Identify tenant ----------------
+      - name: Extract Tenant From Branch
+        run: |
+          BRANCH=${GITHUB_REF_NAME}
+          TENANT=$(echo $BRANCH | cut -d'/' -f1)
+          echo "TENANT=$TENANT" >> $GITHUB_ENV
+          echo "Deploying to namespace: $TENANT"
+
+      # ---------------- Build Image (Podman) ----------------
+      - name: Build Image
+        run: |
+          podman build -t $IMAGE_NAME:$GITHUB_SHA .
+
+      # ---------------- Tag Image ----------------
+      - name: Tag Image
+        run: |
+          podman tag $IMAGE_NAME:$GITHUB_SHA \
+          $REGISTRY/${{ github.repository }}/$IMAGE_NAME:$GITHUB_SHA
+
+      # ---------------- Login to GHCR ----------------
+      - name: Login to Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # ---------------- Push Image ----------------
+      - name: Push Image
+        run: |
+          podman push $REGISTRY/${{ github.repository }}/$IMAGE_NAME:$GITHUB_SHA
+
+      # ---------------- Deploy using Helm ----------------
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install webapp ./charts/webapp \
+            --namespace $TENANT \
+            --create-namespace \
+            -f ./charts/webapp/${TENANT}-values.yaml \
+            --set image.repository=$REGISTRY/${{ github.repository }}/$IMAGE_NAME \
+            --set image.tag=$GITHUB_SHA \
+            --wait --timeout 120s
+
+      # ---------------- Verify Deployment ----------------
+      - name: Check Rollout Status
+        run: |
+          kubectl rollout status deployment/webapp -n $TENANT --timeout=120s
+
+      # ---------------- Rollback on Failure ----------------
+      - name: Rollback Deployment
+        if: failure()
+        run: |
+          echo "Deployment failed. Rolling back..."
+          helm rollback webapp -n $TENANT
+
+      # ---------------- Kafka Event Trigger ----------------
+      - name: Send Kafka Deployment Event
+        if: success()
+        run: |
+          python3 - <<EOF
+          from kafka import KafkaProducer
+          import json, os, datetime
+
+          producer = KafkaProducer(
+              bootstrap_servers="kafka.default.svc.cluster.local:9092",
+              value_serializer=lambda v: json.dumps(v).encode('utf-8')
+          )
+
+          event = {
+              "tenant": os.getenv("TENANT"),
+              "image": "${{ github.sha }}",
+              "status": "DEPLOYED",
+              "timestamp": str(datetime.datetime.utcnow())
+          }
+
+          producer.send("deployment-events", event)
+          producer.flush()
+
+          print("Kafka event sent successfully")
+          EOF
