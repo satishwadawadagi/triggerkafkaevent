@@ -32,13 +32,6 @@ jobs:
         run: |
           podman build -t ${env:IMAGE_NAME}:${env:GITHUB_SHA} .
 
-      # --------------- LowerCase -----------------
-      - name: Set lowercase repo
-        shell: powershell
-        run: |
-          $REPO = "${{ github.repository }}".ToLower()
-          echo "REPO=$REPO" >> $env:GITHUB_ENV
-
       # ---------------- Tag Image ----------------
       - name: Tag Image
         shell: powershell
