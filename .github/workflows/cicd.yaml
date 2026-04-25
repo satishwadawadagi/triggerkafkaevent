@@ -39,10 +39,10 @@ jobs:
           podman tag ${env:IMAGE_NAME}:${env:GITHUB_SHA} ${env:REGISTRY}/${{ github.repository }}/${env:IMAGE_NAME}:${env:GITHUB_SHA}
 
       # ---------------- Login to GHCR ----------------
-      - name: Login to Registry
+      - name: Login to GHCR
         shell: powershell
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io -u satishwadawadagi --password-stdin
 
       # ---------------- Push Image ----------------
       - name: Push Image
