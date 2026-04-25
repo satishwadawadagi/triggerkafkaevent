@@ -17,12 +17,14 @@ jobs:
         uses: actions/checkout@v4
 
       # ---------------- Identify tenant ----------------
-      - name: Extract Tenant From Branch
+      - name: Extract Tenant
+        shell: pwsh
         run: |
-          BRANCH=${GITHUB_REF_NAME}
-          TENANT=$(echo $BRANCH | cut -d'/' -f1)
-          echo "TENANT=$TENANT" >> $GITHUB_ENV
-          echo "Deploying to namespace: $TENANT"
+          $BRANCH = $env:GITHUB_REF_NAME
+          $TENANT = $BRANCH.Split('/')[0]
+
+          echo "TENANT=$TENANT" >> $env:GITHUB_ENV
+          Write-Host "Deploying to namespace: $TENANT"
 
       # ---------------- Build Image (Podman) ----------------
       - name: Build Image
