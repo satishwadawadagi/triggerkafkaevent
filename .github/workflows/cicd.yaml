@@ -28,24 +28,27 @@ jobs:
 
       # ---------------- Build Image (Podman) ----------------
       - name: Build Image
+        shell: powershell
         run: |
-          podman build -t $IMAGE_NAME:$GITHUB_SHA .
+          podman build -t ${env:IMAGE_NAME}:${env:GITHUB_SHA} .
 
       # ---------------- Tag Image ----------------
       - name: Tag Image
+        shell: powershell
         run: |
-          podman tag $IMAGE_NAME:$GITHUB_SHA \
-          $REGISTRY/${{ github.repository }}/$IMAGE_NAME:$GITHUB_SHA
+          podman tag ${env:IMAGE_NAME}:${env:GITHUB_SHA} ${env:REGISTRY}/${{ github.repository }}/${env:IMAGE_NAME}:${env:GITHUB_SHA}
 
       # ---------------- Login to GHCR ----------------
       - name: Login to Registry
+        shell: powershell
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
       # ---------------- Push Image ----------------
       - name: Push Image
+        shell: powershell
         run: |
-          podman push $REGISTRY/${{ github.repository }}/$IMAGE_NAME:$GITHUB_SHA
+          podman push ${env:REGISTRY}/${{ github.repository }}/${env:IMAGE_NAME}:${env:GITHUB_SHA}
 
       # ---------------- Deploy using Helm ----------------
       - name: Deploy to Kubernetes
