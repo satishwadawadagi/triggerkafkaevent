@@ -2,10 +2,6 @@ name: Multi-Tenant CI/CD Pipeline
 
 on: workflow_dispatch
 
-permissions:
-  contents: read
-  packages: write
-  
 env:
   REGISTRY: docker.io
   IMAGE_NAME: multi-tenant-webapp
