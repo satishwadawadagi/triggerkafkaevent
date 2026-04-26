@@ -63,7 +63,7 @@ jobs:
       # ---------------- Verify Deployment ----------------
       - name: Check Rollout Status
         run: |
-          kubectl rollout status deployment/webapp -n user1 
+          kubectl rollout status deployment/webapp -n user1 --timeout=120s
 
       # ---------------- Rollback on Failure ----------------
       - name: Rollback Deployment
