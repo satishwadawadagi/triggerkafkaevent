@@ -70,26 +70,7 @@ jobs:
 
       # ---------------- Kafka Event Trigger ----------------
       - name: Send Kafka Deployment Event
+        shell: powershell
         if: success()
-        run: |
-          python3 - <<EOF
-          from kafka import KafkaProducer
-          import json, os, datetime
-
-          producer = KafkaProducer(
-              bootstrap_servers="kafka.default.svc.cluster.local:9092",
-              value_serializer=lambda v: json.dumps(v).encode('utf-8')
-          )
-
-          event = {
-              "tenant": os.getenv("TENANT"),
-              "image": "${{ github.sha }}",
-              "status": "DEPLOYED",
-              "timestamp": str(datetime.datetime.utcnow())
-          }
-
-          producer.send("deployment-events", event)
-          producer.flush()
-
-          print("Kafka event sent successfully")
-          EOF
+        run: python kafka_producer.py
+        
