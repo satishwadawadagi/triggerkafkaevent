@@ -9,7 +9,6 @@ permissions:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: multi-tenant-webapp
-  TENANT: user1
 
 jobs:
   deploy:
@@ -58,20 +57,20 @@ jobs:
       # ---------------- Deploy using Helm ----------------
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install webapp ./charts/webapp --namespace ${env:TENANT} --create-namespace -f ./charts/webapp/${env:TENANT}-values.yaml `
+          helm upgrade --install webapp ./charts/webapp --namespace user1 --create-namespace -f ./charts/webapp/user1-values.yaml `
             --set image.repository=docker.io/${{ secrets.DOCKER_USERNAME }}/multi-tenant-webapp --set image.tag=$GITHUB_SHA --wait --timeout 120s
 
       # ---------------- Verify Deployment ----------------
       - name: Check Rollout Status
         run: |
-          kubectl rollout status deployment/webapp -n $TENANT --timeout=120s
+          kubectl rollout status deployment/webapp -n user1 --timeout=120s
 
       # ---------------- Rollback on Failure ----------------
       - name: Rollback Deployment
         if: failure()
         run: |
           echo "Deployment failed. Rolling back..."
-          helm rollback webapp -n $TENANT
+          helm rollback webapp -n user1
 
       # ---------------- Kafka Event Trigger ----------------
       - name: Send Kafka Deployment Event
