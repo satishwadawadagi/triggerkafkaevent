@@ -57,7 +57,7 @@ jobs:
       # ---------------- Deploy using Helm ----------------
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install webapp ./charts/webapp --namespace user1 --create-namespace -f ./charts/webapp/user1-values.yaml `
+          helm upgrade --install webapp ./charts/webapp --namespace user1 --create-namespace --wait=false -f ./charts/webapp/user1-values.yaml `
             --set image.repository=docker.io/${{ secrets.DOCKER_USERNAME }}/multi-tenant-webapp --set image.tag=$GITHUB_SHA --wait --timeout 120s
 
       # ---------------- Verify Deployment ----------------
