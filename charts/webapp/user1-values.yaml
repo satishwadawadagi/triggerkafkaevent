@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: docker.io/satishwadawadagi/multi-tenant-webapp
-  tag: "latest"
+  tag: latest
 
 ingress:
   host: user1.example.com
