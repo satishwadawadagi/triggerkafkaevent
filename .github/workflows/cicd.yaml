@@ -42,7 +42,7 @@ jobs:
       - name: Tag Image
         shell: powershell
         run: |
-          podman tag ${env:IMAGE_NAME}:${env:GITHUB_SHA} docker.io/${{ secrets.DOCKER_USERNAME }}/${env:IMAGE_NAME}:${GITHUB_SHA}
+          podman tag ${env:IMAGE_NAME}:${env:GITHUB_SHA} docker.io/${{ secrets.DOCKER_USERNAME }}/${env:IMAGE_NAME}:${env:GITHUB_SHA}
 
       # ---------------- Push Image ----------------
       - name: Push Image
